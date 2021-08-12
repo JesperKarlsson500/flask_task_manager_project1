@@ -23,6 +23,7 @@ app.config["MONGO_DBNAME"] = os.environ.get("MONGO_DBNAME")
 app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
 app.secret_key = os.environ.get("SECRET_KEY")
 
+# pymongo skapar en connection till databasen
 mongo = PyMongo(app)
 
 
@@ -61,6 +62,34 @@ def register():
         session["user"] = request.form.get("username").lower()
         flash("Registration Successful!")
     return render_template("register.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        # check if username exists in db
+        existing_user = mongo.db.users.find_one(
+            {"username": request.form.get("username").lower()})
+        
+        if existing_user:
+            # ensure hashed password matches user input.
+            # to target that user's password in the database,
+            # we append the key that we need inside of square-brackets.
+            if check_password_hash(
+                existing_user["password"], request.form.get("password")):
+                    session["user"] = request.form.get("username").lower()
+                    flash("Welcome, {}".format(request.form.get("username")))
+            else:
+                # Invalid password match
+                flash("Incorrect Username and/or Password")
+                return redirect(url_for("login"))
+
+        else:
+            # username doesn't exist
+            flash("Incorrect Username and/or Password")
+            return redirect(url_for("login"))
+            
+    return render_template("login.html")
 
 
 if __name__ == "__main__":
