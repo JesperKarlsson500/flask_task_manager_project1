@@ -30,7 +30,7 @@ mongo = PyMongo(app)
 @app.route("/")
 @app.route("/get_tasks")
 def get_tasks():
-    tasks = mongo.db.tasks.find()
+    tasks = list(mongo.db.tasks.find())
     # latest tasks = this
     return render_template("tasks.html", tasks=tasks)
     # This will find all documents from the
@@ -105,16 +105,16 @@ def profile(username):
     # on the line above.
     username = mongo.db.users.find_one(
         {"username": session["user"]})["username"]
-    
+
     if session["user"]:
         return render_template("profile.html", username=username)
-    
+
     return redirect_template(url_for("login"))
 
 
 @app.route("/logout")
 def logout():
-    #remove user from session cookies
+    # remove user from session cookies
     flash("You have been logged out")
     session.pop("user")
     # we could just use 'session.clear()',
